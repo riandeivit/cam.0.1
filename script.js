@@ -45,7 +45,7 @@ function initCamera() {
                 photoCanvas.width = cameraFeed.videoWidth;
                 photoCanvas.height = cameraFeed.videoHeight;
                 
-                // >>> NOVO: Tenta iniciar a reprodução no celular <<<
+                // NOVO: Tenta iniciar a reprodução para corrigir problemas de visualização no celular
                 cameraFeed.play().catch(e => console.error("Erro ao tentar reproduzir o vídeo:", e));
             };
         })
@@ -236,7 +236,7 @@ function applyPixelFilter(filterName) {
 
 
 // ===================================
-// FUNÇÃO DE CAPTURA 
+// FUNÇÃO DE CAPTURA (COM INVERSÃO)
 // ===================================
 captureButton.addEventListener('click', () => {
     if (!currentStream) return;
@@ -266,11 +266,19 @@ captureButton.addEventListener('click', () => {
         sourceX = 0;
     }
 
-    // 1. Desenha a imagem ORIGINAL no canvas
+    // 1. Redefine o tamanho do canvas para a imagem cortada
     photoCanvas.width = sourceW;
     photoCanvas.height = sourceH;
-    context.drawImage(cameraFeed, sourceX, sourceY, sourceW, sourceH, 0, 0, sourceW, sourceH);
     
+    // --- NOVO: INVERTE A IMAGEM HORIZONTALMENTE (ESPELHAMENTO) ---
+    context.save();      // Salva o estado atual do contexto
+    context.scale(-1, 1);  // Inverte horizontalmente (espelha)
+    
+    // Desenha a imagem. O -sourceW compensa a inversão do eixo X.
+    context.drawImage(cameraFeed, sourceX, sourceY, sourceW, sourceH, -sourceW, 0, sourceW, sourceH);
+    
+    context.restore();   // Restaura o estado do contexto para o normal
+
     // 2. APLICA O FILTRO USANDO MANIPULAÇÃO DE PIXEL (garante que ele seja salvo)
     applyPixelFilter(currentFilter);
 
