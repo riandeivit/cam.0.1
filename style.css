@@ -8,7 +8,7 @@ body {
     margin: 0;
     padding: 0;
     background-color: #000; 
-    overflow: hidden; /* Evita scrolls indesejados */
+    overflow: hidden; 
 }
 
 .app-container {
@@ -17,43 +17,68 @@ body {
     align-items: center;
     width: 100%;
     max-width: 600px; 
-    height: 100vh; /* Ocupa toda a altura da tela */
+    height: 100vh; 
     padding: 20px 0;
     box-sizing: border-box; 
 }
 
+/* --- CONTROLES SUPERIORES (NOVOS) --- */
+.top-controls {
+    width: 100%;
+    display: flex;
+    justify-content: space-between; 
+    align-items: center;
+    padding: 0 10px; 
+    max-width: 400px; 
+    margin-bottom: 10px;
+    flex-shrink: 0; /* Não encolhe */
+}
+
+.control-btn {
+    background: rgba(0, 0, 0, 0.4); 
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    font-size: 1.2em;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.control-btn:hover:not(:disabled) {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.control-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+}
+
+/* Estado Ativo para o Flash */
+.control-btn.active {
+    background: rgba(255, 255, 0, 0.8);
+    color: #000;
+}
+
 /* --- VIEWINDER (O RETÂNGULO BRANCO - CORREÇÃO DE ALTURA) --- */
 .camera-container {
-    width: 90vw; /* Usa 90% da largura da viewport */
-    max-width: 400px; /* Limita a largura máxima */
+    width: 90vw; 
+    max-width: 400px; 
     position: relative;
-    /* Remover margin-bottom e deixar o flexbox gerenciar. */
-    /* margin-bottom: 50px; */ 
     margin-left: auto;
     margin-right: auto;
-    background-color: rgba(255, 255, 255, 0);
+    background-color: #fff;
     border-radius: 40px; 
     overflow: hidden; 
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
     
-    /* Importante: Fazer o container da câmera crescer, mas com limite */
     flex-grow: 1; 
-    flex-shrink: 1; /* Permite que encolha se precisar */
+    flex-shrink: 1; 
     
-    /* NOVO: Define uma altura MÁXIMA que ocupe o espaço disponível, 
-       mas deixando espaço para os controles.
-       Isso é um ajuste fino para o espaço entre vídeo e botões. */
-    max-height: calc(100vh - 180px); /* Exemplo: 100vh - (altura_botoes + padding_app + margem_extra) */
-    
-    /* fallback para navegadores antigos ou para garantir uma altura mínima */
+    /* CORREÇÃO DE RESPONSIVIDADE: Garante espaço para controles superiores e inferiores */
+    max-height: calc(100vh - 230px); 
     min-height: 200px; 
-}
-
-/* Garante que o aspecto-ratio seja mantido sem esticar o container */
-.camera-container[class*="-container"] {
-    /* Manter a altura máxima, mas permitir que o aspecto-ratio funcione. */
-    /* NÃO usamos max-height aqui novamente, pois já está no .camera-container */
-    width: auto; /* Deixa o aspecto-ratio definir a largura baseada na altura */
 }
 
 #cameraFeed, #photoCanvas {
@@ -63,10 +88,18 @@ body {
     position: absolute;
     top: 0;
     left: 0;
+    
+    /* NOVO: Espelha o vídeo horizontalmente para a pré-visualização (selfie-like) */
+    transform: scaleX(-1); 
 }
 
+/* IMPORTANTE: O Canvas NÃO deve ser espelhado pelo CSS, pois a imagem é capturada espelhada */
+#photoCanvas {
+    transform: none; 
+}
+
+
 /* --- PROPORÇÕES (Para o Viewfinder e para a imagem) --- */
-/* Estas classes de aspecto-ratio no JS garantirão que o tamanho interno seja correto */
 .aspect-4-5-container { aspect-ratio: 4 / 5; }
 .aspect-1-1-container { aspect-ratio: 1 / 1; }
 .aspect-9-16-container { aspect-ratio: 9 / 16; }
@@ -83,15 +116,14 @@ body {
     justify-content: space-around;
     align-items: flex-end; 
     padding: 30px 20px;
-    margin-bottom: 20px; /* Margem da base da tela */
+    margin-bottom: 20px; 
     max-width: 600px;
     box-sizing: border-box;
-    flex-shrink: 0; /* IMPEDIR que os controles encolham */
-    /* NOVO: Garante que os controles tenham uma altura mínima e não sejam cobertos */
+    flex-shrink: 0; 
     min-height: 100px; 
 }
 
-/* Grupos de botões (Proporção e Filtros) - Garante alinhamento e largura igual */
+/* Grupos de botões (Proporção e Filtros) */
 .aspect-group, .filters-group {
     flex-basis: 30%; 
     display: flex;
@@ -109,25 +141,17 @@ button {
     cursor: pointer;
     transition: all 0.2s;
 }
-button:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
 
-/* 1. Botão de CAPTURA (Círculo Branco) */
+/* 1. Botão de CAPTURA */
 .capture-btn {
     width: 70px;
     height: 70px;
     border-radius: 50%;
     background-color: #fff; 
-    border: 5px solid rgb(255, 255, 255); 
+    border: 5px solid #000; 
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); 
     flex-shrink: 0; 
     margin-top: 10px; 
-}
-.capture-btn:hover:not(:disabled) {
-    background-color: #f0f0f0;
-    transform: scale(1.05);
 }
 
 /* 2. Botões de Rótulo (Proporção e Filtro) */
@@ -145,14 +169,13 @@ button:disabled {
     box-shadow: 0 0 0 2px #fff; 
 }
 
-/* 3. Botão de Download (Posicionado em cima do botão de captura) */
+/* 3. Botão de Download */
 .download-btn {
     background-color: #fff;
     color: #000;
     padding: 8px 15px;
     border-radius: 5px;
     font-size: 0.9em;
-    
     position: absolute; 
     bottom: 30px; 
     left: 50%;
@@ -198,14 +221,17 @@ button:disabled {
         padding: 10px 0;
     }
     .camera-container {
-        /* Ajusta a altura máxima para deixar mais espaço para os botões em telas pequenas */
-        max-height: calc(100vh - 150px); /* Reduzindo um pouco mais o espaço ocupado */
-        border-radius: 20px; /* Cantos um pouco menos arredondados em telas menores */
+        max-height: calc(100vh - 190px); 
+        border-radius: 20px; 
     }
     .bottom-controls {
         padding: 15px 10px;
         margin-bottom: 10px;
-        min-height: 80px; /* Altura mínima para os controles em telas menores */
+        min-height: 80px; 
+    }
+    .top-controls {
+        max-width: 350px;
+        padding: 0 5px;
     }
     .capture-btn {
         width: 60px;
@@ -215,5 +241,9 @@ button:disabled {
     .ratio-label, .filter-label, .download-btn {
         padding: 6px 10px;
         font-size: 0.8em;
+    }
+    .control-btn {
+        width: 35px;
+        height: 35px;
     }
 }
