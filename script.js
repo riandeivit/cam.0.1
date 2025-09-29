@@ -18,71 +18,149 @@ const hiddenFilters = document.getElementById('hiddenFilters');
 const secondaryFilterButtons = document.querySelectorAll('#hiddenFilters .filter-btn');
 let isFilterExpanded = false; 
 
+// ===================================
+// VARIÁVEIS DE CÂMERA E CONTROLES SUPERIORES
+// ===================================
+const flipCameraButton = document.getElementById('flipCameraButton');
+const flashButton = document.getElementById('flashButton');
+let currentFacingMode = 'user'; // Começa com a câmera FRONTAL (selfie)
+let isFlashlightAvailable = false;
+let isFlashlightOn = false;
 let currentStream = null;
 let currentFilter = 'none';
+
 
 // ===================================
 // INICIALIZAÇÃO AUTOMÁTICA DA CÂMERA
 // ===================================
 window.onload = () => {
     updateAspectRatio('4-5');
-    initCamera();
+    setupControls(); // Configura os event listeners
+    initCamera(currentFacingMode); // Inicia a câmera (frontal por padrão)
     applyFilter('none'); 
     downloadButton.style.display = 'none'; 
 };
 
-function initCamera() {
-    // navigator.mediaDevices.getUserMedia é a API principal para acesso à câmera
-    navigator.mediaDevices.getUserMedia({ video: true })
+// NOVO: Função para parar o stream atual
+function stopCamera() {
+    if (currentStream) {
+        currentStream.getTracks().forEach(track => {
+            track.stop();
+        });
+    }
+}
+
+// ATUALIZADA: Função para iniciar a câmera com base no facingMode
+function initCamera(facingMode) {
+    stopCamera(); 
+    
+    // Desliga o flash antes de tentar iniciar (boa prática)
+    if (isFlashlightOn) {
+        isFlashlightOn = false;
+        flashButton.classList.remove('active');
+        flashButton.textContent = '💡';
+    }
+
+    const constraints = {
+        video: {
+            facingMode: facingMode, 
+            width: { ideal: 1920 },
+            height: { ideal: 1080 }
+        }
+    };
+
+    navigator.mediaDevices.getUserMedia(constraints)
         .then(stream => {
             currentStream = stream;
             cameraFeed.srcObject = stream;
             cameraFeed.style.display = 'block';
-            
             captureButton.disabled = false;
+            currentFacingMode = facingMode; 
             
+            // Lógica para detecção e controle do Flash
+            const videoTrack = currentStream.getVideoTracks()[0];
+            const capabilities = videoTrack.getCapabilities();
+            
+            isFlashlightAvailable = capabilities.torch; 
+
+            // O Flash só é habilitado se estiver disponível E se a câmera for a traseira
+            if (isFlashlightAvailable && currentFacingMode === 'environment') {
+                flashButton.disabled = false;
+            } else {
+                flashButton.disabled = true;
+            }
+
             cameraFeed.onloadedmetadata = () => {
                 photoCanvas.width = cameraFeed.videoWidth;
                 photoCanvas.height = cameraFeed.videoHeight;
-                
-                // NOVO: Tenta iniciar a reprodução para corrigir problemas de visualização no celular
                 cameraFeed.play().catch(e => console.error("Erro ao tentar reproduzir o vídeo:", e));
             };
         })
         .catch(error => {
             console.error('Erro ao acessar a câmera:', error.name, error.message);
             
-            let errorMessage = 'Não foi possível acessar a câmera. Motivo: ';
+            let errorMessage = 'Não foi possível acessar a câmera.';
             
             if (error.name === 'NotAllowedError') {
-                 errorMessage += 'Você negou a permissão ou o site está em um contexto inseguro (não HTTPS).';
-            } else if (error.name === 'NotReadableError') {
-                 errorMessage += 'A câmera está sendo usada por outro aplicativo.';
+                 errorMessage += ' Você negou a permissão.';
             } else if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
-                 // Aviso crucial para o mobile
-                 errorMessage = 'FALHA DE SEGURANÇA: A câmera só pode ser acessada em um site **SEGURO (HTTPS)**. Por favor, use HTTPS.';
-            } else {
-                 errorMessage += 'Erro desconhecido. Por favor, tente novamente.';
+                 errorMessage = 'FALHA DE SEGURANÇA: A câmera só pode ser acessada em um site **SEGURO (HTTPS)**.';
             }
 
             alert(errorMessage);
             captureButton.disabled = true;
+            flashButton.disabled = true;
         });
 }
 
+// NOVO: Função para alternar entre as câmeras
+function flipCamera() {
+    const newFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+    initCamera(newFacingMode);
+}
+
+// NOVO: Função para ligar/desligar o flash
+function toggleFlash() {
+    if (!isFlashlightAvailable || currentFacingMode === 'user' || flashButton.disabled) {
+        return;
+    }
+    
+    const track = currentStream.getVideoTracks()[0];
+    isFlashlightOn = !isFlashlightOn;
+
+    track.applyConstraints({
+        advanced: [{ torch: isFlashlightOn }]
+    }).then(() => {
+        if (isFlashlightOn) {
+            flashButton.classList.add('active');
+            flashButton.textContent = '⚡'; 
+        } else {
+            flashButton.classList.remove('active');
+            flashButton.textContent = '💡'; 
+        }
+    }).catch(e => {
+        console.error('Erro ao controlar o flash:', e);
+        isFlashlightOn = !isFlashlightOn; 
+        alert('Não foi possível controlar o Flash.');
+    });
+}
+
+// NOVO: Configura os event listeners
+function setupControls() {
+    flipCameraButton.addEventListener('click', flipCamera);
+    flashButton.addEventListener('click', toggleFlash);
+}
+
+
 // ===================================
-// LÓGICA DE PROPORÇÃO DE TELA
+// LÓGICA DE PROPORÇÃO DE TELA (sem alterações)
 // ===================================
 function updateAspectRatio(ratio) {
-    // 1. Limpa classes antigas
     cameraContainer.classList.remove('aspect-4-5-container', 'aspect-1-1-container', 'aspect-9-16-container');
     cameraFeed.classList.remove('aspect-4-5', 'aspect-1-1', 'aspect-9-16');
     photoCanvas.classList.remove('aspect-4-5', 'aspect-1-1', 'aspect-9-16');
 
-    // 2. Aplica a nova classe de proporção ao CONTÊINER (Viewfinder)
     cameraContainer.classList.add(`aspect-${ratio}-container`);
-
-    // 3. Aplica a nova classe de proporção ao FEED e ao CANVAS
     cameraFeed.classList.add(`aspect-${ratio}`, currentFilter);
     photoCanvas.classList.add(`aspect-${ratio}`);
 }
@@ -99,7 +177,6 @@ mainToggle.addEventListener('click', () => {
 secondaryRatioButtons.forEach(button => {
     button.addEventListener('click', (event) => {
         const ratio = event.target.getAttribute('data-ratio');
-        
         updateAspectRatio(ratio);
         
         const oldRatio = mainToggle.getAttribute('data-ratio');
@@ -117,14 +194,12 @@ secondaryRatioButtons.forEach(button => {
 });
 
 // ===================================
-// LÓGICA DE FILTROS (APENAS PARA PREVIEW CSS)
+// LÓGICA DE FILTROS (sem alterações)
 // ===================================
 function applyFilter(filterName) {
-    // Remove filtros CSS de ambos
     cameraFeed.classList.remove('none', 'grayscale', 'sepia', 'vintage');
     photoCanvas.classList.remove('none', 'grayscale', 'sepia', 'vintage');
     
-    // Aplica o filtro CSS apenas ao feed de vídeo para o preview
     if (filterName !== 'custom-js') {
         cameraFeed.classList.add(filterName);
     }
@@ -144,11 +219,8 @@ filterToggle.addEventListener('click', () => {
 secondaryFilterButtons.forEach(button => {
     button.addEventListener('click', (event) => {
         const filterName = event.target.getAttribute('data-filter');
-        
-        // Aplica o filtro CSS para o preview
         applyFilter(filterName);
         
-        // Atualiza os rótulos
         const oldFilter = filterToggle.getAttribute('data-filter');
         const oldText = filterToggle.textContent;
 
@@ -166,28 +238,23 @@ secondaryFilterButtons.forEach(button => {
 });
 
 // ===================================
-// FUNÇÕES DE MANIPULAÇÃO DE PIXEL (GARANTE QUE O FILTRO SEJA SALVO)
+// FUNÇÕES DE MANIPULAÇÃO DE PIXEL (sem alterações)
 // ===================================
-
 function applyPixelFilter(filterName) {
-    // Se for 'none', retorna e não faz manipulação
     if (filterName === 'none') {
         return;
     }
     
-    // Obtém os dados do pixel
     let imageData = context.getImageData(0, 0, photoCanvas.width, photoCanvas.height);
     let data = imageData.data; 
 
-    // Aplica a manipulação baseada no filtro
     switch (filterName) {
         case 'grayscale':
             for (let i = 0; i < data.length; i += 4) {
-                // Cálculo de luminância para P&B
                 let avg = (data[i] * 0.299) + (data[i + 1] * 0.587) + (data[i + 2] * 0.114);
-                data[i] = avg;     // R
-                data[i + 1] = avg; // G
-                data[i + 2] = avg; // B
+                data[i] = avg;     
+                data[i + 1] = avg; 
+                data[i + 2] = avg; 
             }
             break;
         case 'sepia':
@@ -196,32 +263,27 @@ function applyPixelFilter(filterName) {
                 let g = data[i + 1];
                 let b = data[i + 2];
                 
-                // Conversão Sépia
-                data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189)); // R
-                data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168)); // G
-                data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131)); // B
+                data[i] = Math.min(255, (r * 0.393) + (g * 0.769) + (b * 0.189)); 
+                data[i + 1] = Math.min(255, (r * 0.349) + (g * 0.686) + (b * 0.168)); 
+                data[i + 2] = Math.min(255, (r * 0.272) + (g * 0.534) + (b * 0.131)); 
             }
             break;
         case 'vintage':
-             // Simulação de Vintage (combina sépia, contraste e saturação)
              for (let i = 0; i < data.length; i += 4) {
                 let r = data[i];
                 let g = data[i + 1];
                 let b = data[i + 2];
                 
-                // Aplica Sépia/Tom Suave
                 data[i] = (r * 0.9) + (g * 0.05) + (b * 0.05);
                 data[i + 1] = (r * 0.05) + (g * 0.8) + (b * 0.05);
                 data[i + 2] = (r * 0.05) + (g * 0.05) + (b * 0.7);
                 
-                // Aumenta o contraste (Aproximação)
                 data[i] = Math.min(255, Math.max(0, 1.2 * (data[i] - 128) + 128));
                 data[i + 1] = Math.min(255, Math.max(0, 1.2 * (data[i + 1] - 128) + 128));
                 data[i + 2] = Math.min(255, Math.max(0, 1.2 * (data[i + 2] - 128) + 128));
             }
             break;
         case 'custom-js':
-            // Filtro Customizado (Inverter Cores)
             for (let i = 0; i < data.length; i += 4) {
                 data[i] = 255 - data[i];
                 data[i + 1] = 255 - data[i + 1];
@@ -230,18 +292,17 @@ function applyPixelFilter(filterName) {
             break;
     }
     
-    // Coloca os novos dados de pixel no canvas
     context.putImageData(imageData, 0, 0);
 }
 
 
 // ===================================
-// FUNÇÃO DE CAPTURA (COM INVERSÃO)
+// FUNÇÃO DE CAPTURA (CORRIGIDA: SEM ESPELHAMENTO DO CANVAS)
 // ===================================
 captureButton.addEventListener('click', () => {
     if (!currentStream) return;
 
-    // --- CÁLCULO DE CORTE ---
+    // --- CÁLCULO DE CORTE (Crop) ---
     const activeRatioClass = mainToggle.getAttribute('data-ratio');
     let [num, den] = activeRatioClass.split('-').map(Number);
     const targetRatio = num / den; 
@@ -266,45 +327,43 @@ captureButton.addEventListener('click', () => {
         sourceX = 0;
     }
 
-    // 1. Redefine o tamanho do canvas para a imagem cortada
+    // 1. Redefine o tamanho do canvas
     photoCanvas.width = sourceW;
     photoCanvas.height = sourceH;
     
-    // --- NOVO: INVERTE A IMAGEM HORIZONTALMENTE (ESPELHAMENTO) ---
-    context.save();      // Salva o estado atual do contexto
-    context.scale(-1, 1);  // Inverte horizontalmente (espelha)
+    // Desenha a imagem. Como o FEED de vídeo está espelhado pelo CSS, 
+    // a captura para o Canvas já sai espelhada, exatamente como a pré-visualização.
+    context.drawImage(cameraFeed, sourceX, sourceY, sourceW, sourceH, 0, 0, sourceW, sourceH);
     
-    // Desenha a imagem. O -sourceW compensa a inversão do eixo X.
-    context.drawImage(cameraFeed, sourceX, sourceY, sourceW, sourceH, -sourceW, 0, sourceW, sourceH);
-    
-    context.restore();   // Restaura o estado do contexto para o normal
-
-    // 2. APLICA O FILTRO USANDO MANIPULAÇÃO DE PIXEL (garante que ele seja salvo)
+    // 2. APLICA O FILTRO POR PIXEL
     applyPixelFilter(currentFilter);
 
     // 3. Adiciona a classe de proporção para o display
     photoCanvas.className = '';
     photoCanvas.classList.add(`aspect-${activeRatioClass}`); 
 
-    // Oculta botão de captura, mostra o de download e o canvas
+    // Oculta vídeo e mostra o canvas
     cameraFeed.style.display = 'none';
     photoCanvas.style.display = 'block';
 
     captureButton.style.display = 'none';
     downloadButton.style.display = 'inline-block';
     downloadButton.disabled = false;
+    
+    // Desliga o flash após a captura (se estiver ligado)
+    if (isFlashlightOn) {
+        toggleFlash();
+    }
 });
 
 
 // ===================================
-// FUNÇÃO DE DOWNLOAD (ALTA QUALIDADE - PNG)
+// FUNÇÃO DE DOWNLOAD (sem alterações)
 // ===================================
 downloadButton.addEventListener('click', () => {
-    // Usamos PNG para garantir ALTA QUALIDADE SEM COMPRESSÃO (LOSSLESS)
     const MIME_TYPE = 'image/png';
     const QUALITY = 1.0; 
 
-    // O canvas já contém os pixels filtrados, basta exportar
     const dataURL = photoCanvas.toDataURL(MIME_TYPE, QUALITY); 
     
     const link = document.createElement('a');
