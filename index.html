@@ -10,6 +10,15 @@
 
     <div class="app-container">
         
+        <div class="top-controls">
+            <button id="flipCameraButton" class="control-btn" title="Virar Câmera">
+                🔄
+            </button>
+            <button id="flashButton" class="control-btn" title="Flash" disabled>
+                💡
+            </button>
+        </div>
+        
         <div class="camera-container aspect-4-5-container">
             <video id="cameraFeed" autoplay playsinline muted></video>
             <canvas id="photoCanvas" style="display: none;"></canvas>
@@ -40,7 +49,6 @@
                     <button class="filter-btn" data-filter="custom-js">Inverter</button>
                 </div>
             </div>
-
             
         </div>
     </div>
