@@ -10,8 +10,8 @@
 
     <div class="app-container">
         
-        <div class="camera-container">
-            <video id="cameraFeed" autoplay></video>
+        <div class="camera-container aspect-4-5-container">
+            <video id="cameraFeed" autoplay playsinline muted></video>
             <canvas id="photoCanvas" style="display: none;"></canvas>
         </div>
         
@@ -28,6 +28,8 @@
 
             <button id="captureButton" class="capture-btn" disabled></button>
             
+            <button id="downloadButton" class="download-btn" disabled style="display: none;">Baixar</button>
+            
             <div class="filters-group">
                 <button class="filter-btn active-filter filter-label" data-filter="none">Original</button>
                 
@@ -35,11 +37,10 @@
                     <button class="filter-btn" data-filter="grayscale">P&B</button>
                     <button class="filter-btn" data-filter="sepia">Sépia</button>
                     <button class="filter-btn" data-filter="vintage">Vintage</button>
-                    <button class="filter-btn" data-filter="custom-js">Custom JS</button>
+                    <button class="filter-btn" data-filter="custom-js">Inverter</button>
                 </div>
             </div>
 
-            <button id="downloadButton" class="download-btn" disabled style="display: none;">Baixar</button>
             
         </div>
     </div>
