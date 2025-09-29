@@ -7,8 +7,8 @@ body {
     min-height: 100vh; 
     margin: 0;
     padding: 0;
-    background-color: #000; /* Fundo Preto */
-    overflow: hidden; 
+    background-color: #000; 
+    overflow: hidden; /* Evita scrolls indesejados */
 }
 
 .app-container {
@@ -17,43 +17,56 @@ body {
     align-items: center;
     width: 100%;
     max-width: 600px; 
-    height: 100vh; 
+    height: 100vh; /* Ocupa toda a altura da tela */
     padding: 20px 0;
     box-sizing: border-box; 
 }
 
-/* --- VIEWINDER (O RETÂNGULO BRANCO) --- */
+/* --- VIEWINDER (O RETÂNGULO BRANCO - CORREÇÃO DE ALTURA) --- */
 .camera-container {
-    width: 90vw; 
-    max-width: 400px;
+    width: 90vw; /* Usa 90% da largura da viewport */
+    max-width: 400px; /* Limita a largura máxima */
     position: relative;
-    margin-bottom: 50px; 
+    /* Remover margin-bottom e deixar o flexbox gerenciar. */
+    /* margin-bottom: 50px; */ 
     margin-left: auto;
     margin-right: auto;
     background-color: rgba(255, 255, 255, 0);
-    border-radius: 40px; /* Cantos arredondados */
+    border-radius: 40px; 
     overflow: hidden; 
-    /* Sombra removida para tirar a 'borda branca' */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
+    
+    /* Importante: Fazer o container da câmera crescer, mas com limite */
     flex-grow: 1; 
+    flex-shrink: 1; /* Permite que encolha se precisar */
+    
+    /* NOVO: Define uma altura MÁXIMA que ocupe o espaço disponível, 
+       mas deixando espaço para os controles.
+       Isso é um ajuste fino para o espaço entre vídeo e botões. */
+    max-height: calc(100vh - 180px); /* Exemplo: 100vh - (altura_botoes + padding_app + margem_extra) */
+    
+    /* fallback para navegadores antigos ou para garantir uma altura mínima */
+    min-height: 200px; 
 }
 
-/* O contêiner de câmera usa a proporção correta */
+/* Garante que o aspecto-ratio seja mantido sem esticar o container */
 .camera-container[class*="-container"] {
-    max-height: 80vh; 
-    width: auto;
+    /* Manter a altura máxima, mas permitir que o aspecto-ratio funcione. */
+    /* NÃO usamos max-height aqui novamente, pois já está no .camera-container */
+    width: auto; /* Deixa o aspecto-ratio definir a largura baseada na altura */
 }
 
 #cameraFeed, #photoCanvas {
     width: 100%;
     height: 100%; 
-    object-fit: cover; /* Garante que o vídeo preencha o container */
+    object-fit: cover; 
     position: absolute;
     top: 0;
     left: 0;
 }
 
 /* --- PROPORÇÕES (Para o Viewfinder e para a imagem) --- */
+/* Estas classes de aspecto-ratio no JS garantirão que o tamanho interno seja correto */
 .aspect-4-5-container { aspect-ratio: 4 / 5; }
 .aspect-1-1-container { aspect-ratio: 1 / 1; }
 .aspect-9-16-container { aspect-ratio: 9 / 16; }
@@ -70,15 +83,17 @@ body {
     justify-content: space-around;
     align-items: flex-end; 
     padding: 30px 20px;
-    margin-bottom: 20px; 
+    margin-bottom: 20px; /* Margem da base da tela */
     max-width: 600px;
     box-sizing: border-box;
-    flex-shrink: 0; 
+    flex-shrink: 0; /* IMPEDIR que os controles encolham */
+    /* NOVO: Garante que os controles tenham uma altura mínima e não sejam cobertos */
+    min-height: 100px; 
 }
 
 /* Grupos de botões (Proporção e Filtros) - Garante alinhamento e largura igual */
 .aspect-group, .filters-group {
-    flex-basis: 30%; /* Largura igual para os grupos laterais */
+    flex-basis: 30%; 
     display: flex;
     flex-direction: column; 
     align-items: center;
@@ -104,7 +119,7 @@ button:disabled {
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    background-color: #fff; /* Botão Branco */
+    background-color: #fff; 
     border: 5px solid rgb(255, 255, 255); 
     box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); 
     flex-shrink: 0; 
@@ -175,3 +190,30 @@ button:disabled {
 .sepia { filter: sepia(100%); }
 .vintage { filter: sepia(0.8) contrast(1.2) saturate(1.5); }
 .none { filter: none; }
+
+
+/* --- MEDIA QUERIES PARA RESPONSIVIDADE (AJUSTES PARA CELULAR) --- */
+@media (max-width: 600px) {
+    .app-container {
+        padding: 10px 0;
+    }
+    .camera-container {
+        /* Ajusta a altura máxima para deixar mais espaço para os botões em telas pequenas */
+        max-height: calc(100vh - 150px); /* Reduzindo um pouco mais o espaço ocupado */
+        border-radius: 20px; /* Cantos um pouco menos arredondados em telas menores */
+    }
+    .bottom-controls {
+        padding: 15px 10px;
+        margin-bottom: 10px;
+        min-height: 80px; /* Altura mínima para os controles em telas menores */
+    }
+    .capture-btn {
+        width: 60px;
+        height: 60px;
+        border-width: 4px;
+    }
+    .ratio-label, .filter-label, .download-btn {
+        padding: 6px 10px;
+        font-size: 0.8em;
+    }
+}
