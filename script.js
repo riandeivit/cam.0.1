@@ -42,9 +42,11 @@ function initCamera() {
             captureButton.disabled = false;
             
             cameraFeed.onloadedmetadata = () => {
-                // Define o tamanho nativo da câmera como o máximo do canvas
                 photoCanvas.width = cameraFeed.videoWidth;
                 photoCanvas.height = cameraFeed.videoHeight;
+                
+                // >>> NOVO: Tenta iniciar a reprodução no celular <<<
+                cameraFeed.play().catch(e => console.error("Erro ao tentar reproduzir o vídeo:", e));
             };
         })
         .catch(error => {
