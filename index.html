@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sua Câmera com Filtros</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <div class="camera-container">
+            <video id="cameraFeed" autoplay></video>
+            <canvas id="photoCanvas" style="display: none;"></canvas>
+        </div>
+        
+        <div class="bottom-controls">
+            
+            <div class="aspect-group">
+                <button class="aspect-btn main-toggle ratio-label" data-ratio="4-5">4:5</button>
+                
+                <div id="hiddenRatios" class="hidden-ratios">
+                    <button class="aspect-btn" data-ratio="1-1">1:1</button>
+                    <button class="aspect-btn" data-ratio="9-16">9:16</button>
+                </div>
+            </div>
+
+            <button id="captureButton" class="capture-btn" disabled></button>
+            
+            <div class="filters-group">
+                <button class="filter-btn active-filter filter-label" data-filter="none">Original</button>
+                
+                <div id="hiddenFilters" class="hidden-filters">
+                    <button class="filter-btn" data-filter="grayscale">P&B</button>
+                    <button class="filter-btn" data-filter="sepia">Sépia</button>
+                    <button class="filter-btn" data-filter="vintage">Vintage</button>
+                    <button class="filter-btn" data-filter="custom-js">Custom JS</button>
+                </div>
+            </div>
+
+            <button id="downloadButton" class="download-btn" disabled style="display: none;">Baixar</button>
+            
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+/* CONFIGURAÇÕES GERAIS E LAYOUT */
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh; 
+    margin: 0;
+    padding: 0;
+    background-color: #000; /* Fundo Preto */
+    overflow: hidden; 
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    width: 100%;
+    max-width: 600px; 
+    height: 100vh; 
+    padding: 20px 0;
+    box-sizing: border-box; 
+}
+
+/* --- VIEWINDER (O RETÂNGULO BRANCO) --- */
+.camera-container {
+    width: 90vw; 
+    max-width: 400px;
+    position: relative;
+    margin-bottom: 50px; 
+    margin-left: auto;
+    margin-right: auto;
+    background-color: rgba(255, 255, 255, 0);
+    border-radius: 40px; /* Cantos arredondados */
+    overflow: hidden; 
+    /* Sombra removida para tirar a 'borda branca' */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
+    flex-grow: 1; 
+}
+
+/* O contêiner de câmera usa a proporção correta */
+.camera-container[class*="-container"] {
+    max-height: 80vh; 
+    width: auto;
+}
+
+#cameraFeed, #photoCanvas {
+    width: 100%;
+    height: 100%; 
+    object-fit: cover; /* Garante que o vídeo preencha o container */
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* --- PROPORÇÕES (Para o Viewfinder e para a imagem) --- */
+.aspect-4-5-container { aspect-ratio: 4 / 5; }
+.aspect-1-1-container { aspect-ratio: 1 / 1; }
+.aspect-9-16-container { aspect-ratio: 9 / 16; }
+
+.aspect-4-5 { aspect-ratio: 4 / 5; }
+.aspect-1-1 { aspect-ratio: 1 / 1; }
+.aspect-9-16 { aspect-ratio: 9 / 16; }
+
+
+/* --- CONTROLES INFERIORES (Alinhamento e tamanho) --- */
+.bottom-controls {
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    align-items: flex-end; 
+    padding: 30px 20px;
+    margin-bottom: 20px; 
+    max-width: 600px;
+    box-sizing: border-box;
+    flex-shrink: 0; 
+}
+
+/* Grupos de botões (Proporção e Filtros) - Garante alinhamento e largura igual */
+.aspect-group, .filters-group {
+    flex-basis: 30%; /* Largura igual para os grupos laterais */
+    display: flex;
+    flex-direction: column; 
+    align-items: center;
+    gap: 5px;
+    text-align: center; 
+}
+
+/* --- ESTILO BASE DOS BOTÕES --- */
+button {
+    font-family: inherit;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* 1. Botão de CAPTURA (Círculo Branco) */
+.capture-btn {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background-color: #fff; /* Botão Branco */
+    border: 5px solid rgb(255, 255, 255); 
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5); 
+    flex-shrink: 0; 
+    margin-top: 10px; 
+}
+.capture-btn:hover:not(:disabled) {
+    background-color: #f0f0f0;
+    transform: scale(1.05);
+}
+
+/* 2. Botões de Rótulo (Proporção e Filtro) */
+.ratio-label, .filter-label {
+    background-color: #fff;
+    color: #000;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    width: 100%; 
+    box-sizing: border-box;
+    flex-shrink: 0;
+}
+.active-filter {
+    box-shadow: 0 0 0 2px #fff; 
+}
+
+/* 3. Botão de Download (Posicionado em cima do botão de captura) */
+.download-btn {
+    background-color: #fff;
+    color: #000;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-size: 0.9em;
+    
+    position: absolute; 
+    bottom: 30px; 
+    left: 50%;
+    transform: translateX(-50%); 
+}
+
+
+/* --- CONTROLES DE GRUPO (EXPANDIDOS) --- */
+.hidden-ratios, .hidden-filters {
+    display: none;
+    gap: 5px;
+    transition: all 0.3s ease-in-out;
+    margin-top: 10px; 
+    justify-content: center; 
+}
+
+.hidden-ratios.expanded, .hidden-filters.expanded {
+    display: flex;
+    animation: slide-in 0.3s forwards;
+}
+
+@keyframes slide-in {
+    from { 
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* --- FILTROS CSS (APENAS PARA O PREVIEW DO VÍDEO) --- */
+.grayscale { filter: grayscale(100%); }
+.sepia { filter: sepia(100%); }
+.vintage { filter: sepia(0.8) contrast(1.2) saturate(1.5); }
+.none { filter: none; }
